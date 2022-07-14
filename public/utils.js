@@ -1,4 +1,6 @@
 import * as Index from "./index.js";
+import * as Caret from "./caret.js";
+import { WordBlurb } from "./wordBlurb.js";
 
 const getCurrentBlurb = () => {
   let currentBlurb = Index.words.filter((blurb) => blurb.currentBlurb);
@@ -52,4 +54,85 @@ const getClosestInt = (target, arr) => {
   return res;
 };
 
-export { binarySearch, getCurrentBlurb, getClosestIndex, getClosestInt };
+const handleLengthyOutsideText = () => {
+  let tempCharList = Caret.caret.outsideText.split("");
+  let i = 0;
+  let tempStr = "";
+  let output = [];
+  while (i <= tempCharList.length) {
+    tempStr += tempCharList[i];
+    let textMetrics = Index.ctx.measureText(tempStr);
+
+    if (textMetrics.width >= 400 && output.length == 0) {
+      //create a wordBlurb with the first ~400 chunk
+      //set tempstr to '' again
+      output.push(
+        new WordBlurb(
+          Caret.caret.currLocationLive.x,
+          Caret.caret.currLocationLive.y
+        )
+      );
+      output.at(-1).str = tempStr;
+      output.at(-1).charList = tempStr.split("");
+      tempStr = "";
+    } else if (textMetrics.width >= 400) {
+      console.log(output);
+      output.push(
+        new WordBlurb(output.at(-1).startX, output.at(-1).startY + 18)
+      );
+      output.at(-1).str = tempStr;
+      output.at(-1).charList = tempStr.split("");
+      tempStr = "";
+    } else {
+      i += 1;
+    }
+  }
+  output.push(new WordBlurb(output.at(-1).startX, output.at(-1).startY + 18));
+  output.at(-1).str = tempStr;
+  output.at(-1).charList = tempStr.split("");
+  console.log("output", output);
+  determineWordBlurbMetrics(output);
+  console.log("new output", output);
+  //set currentBlurb to false for all but last one...
+  output.forEach((wb) => {
+    wb.currentBlurb = false;
+    Index.words.push(wb);
+  });
+  Index.words.at(-1).currentBlurb = true;
+
+  //push all to the index.words state ...see what happens i guess..
+};
+
+const determineWordBlurbMetrics = (arr) => {
+  //edits wordblurb objects so they can then be sent to the global state...Index.words...
+  //takes in an arr of wordblurb objects...
+
+  //edits the array so all the objects are filled out now...
+  arr.forEach((wb) => {
+    let textMetrics = Index.ctx.measureText(wb.str);
+    wb.length = textMetrics.width;
+
+    let tempCharStr = wb.str;
+    wb.charList.forEach((c) => {
+      //width is dynamic...
+      let textMetrics = Index.ctx.measureText(tempCharStr);
+      wb.cursorLocations.push(textMetrics.width + wb.startX);
+      tempCharStr = tempCharStr.slice(0, -1);
+    });
+
+    wb.cursorLocations = wb.cursorLocations.reverse();
+
+    wb.endX = textMetrics.width + wb.startX;
+    wb.endY = wb.startY;
+  });
+  console.log(arr, "arr");
+};
+
+export {
+  binarySearch,
+  getCurrentBlurb,
+  getClosestIndex,
+  getClosestInt,
+  handleLengthyOutsideText,
+  determineWordBlurbMetrics,
+};

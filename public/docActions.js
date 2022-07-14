@@ -1,8 +1,12 @@
 import * as Index from "./index.js";
-import { getCurrentBlurb } from "./utils.js";
+import {
+  getCurrentBlurb,
+  handleLengthyOutsideText,
+  determineWordBlurbMetrics,
+} from "./utils.js";
 import * as Caret from "./caret.js";
 import { WordBlurb } from "./wordBlurb.js";
-
+import * as WBA from "./wordBlurbActions.js";
 const copy = () => {
   determineSelectedData(Caret.caret.indexOfSelectionStart, Caret.caret.index);
   console.log("copy is running...");
@@ -19,47 +23,29 @@ addEventListener("paste", (event) => {
 });
 
 const paste = () => {
-  Index.words.forEach((word) => (word.currentBlurb = false));
-  Index.words.push(
-    new WordBlurb(
-      Caret.caret.currLocationLive.x,
-      Caret.caret.currLocationLive.y
-    )
-  );
-  let currBlurbInfo = getCurrentBlurb();
-
   //selectedText is from the determineSelectedData calll...
   if (Caret.caret.selectedText.length > 0) {
+    //create the new blurb to paste....
+    Index.words.forEach((word) => (word.currentBlurb = false));
+    Index.words.push(
+      new WordBlurb(
+        Caret.caret.currLocationLive.x,
+        Caret.caret.currLocationLive.y
+      )
+    );
+    let currBlurbInfo = getCurrentBlurb();
     Index.words[currBlurbInfo[1]].str = Caret.caret.selectedText.join("");
     Index.words[currBlurbInfo[1]].charList = Caret.caret.selectedText;
+    //editing the state directly,,, I don't think i've typically done this...
+    determineWordBlurbMetrics([currBlurbInfo[0]]);
     Caret.caret.selectedText = [];
   } else {
-    Index.words[currBlurbInfo[1]].str = Caret.caret.outsideText;
-    Index.words[currBlurbInfo[1]].charList = Caret.caret.outsideText.split("");
+    if (Index.ctx.measureText(Caret.caret.outsideText).width >= 400) {
+      handleLengthyOutsideText();
+    }
+
     Caret.caret.selectedText = "";
   }
-  //list out loose ends that need to be tied up here...
-
-  let textMetrics = Index.ctx.measureText(currBlurbInfo[0].str);
-  Index.words[currBlurbInfo[1]].length = textMetrics.width;
-
-  let tempCharStr = Index.words[currBlurbInfo[1]].str;
-  Index.words[currBlurbInfo[1]].charList.forEach((c) => {
-    //width is dynamic...
-    let textMetrics = Index.ctx.measureText(tempCharStr);
-    Index.words[currBlurbInfo[1]].cursorLocations.push(
-      textMetrics.width + currBlurbInfo[0].startX
-    );
-    tempCharStr = tempCharStr.slice(0, -1);
-  });
-
-  Index.words[currBlurbInfo[1]].cursorLocations =
-    Index.words[currBlurbInfo[1]].cursorLocations.reverse();
-
-  Index.words[currBlurbInfo[1]].endX =
-    textMetrics.width + currBlurbInfo[0].startX;
-  Index.words[currBlurbInfo[1]].endY = currBlurbInfo[0].startY;
-  console.log("ran...");
 };
 
 const handleRightArrow = (e) => {
@@ -180,5 +166,6 @@ const handleEnter = (e, currBlurbInfo) => {
   //hitting enter will 1. move the cursor to the startX verticle axis but like -10 startY or something...
   //create a new wordBlurb to be added, similar to mouse down...
   //words is becoming obsolute bc of the the new cloud array...adds a layer of structure...
+  WBA.createBlurb(true);
 };
 export { copy, paste, cut, handleLeftArrow, handleRightArrow, handleEnter };

@@ -18,7 +18,7 @@ const insertCursor = () => {
     );
   } //else just leave it at zero...it will be changed by move caret...
 
-  //hell fucking yeah this is what i needed...to solve highlighitng issue...
+  // yeah this is what i needed...to solve highlighitng issue...
   Caret.caret.indexOfSelectionStart = Caret.caret.index;
   Caret.caret.selectionLength = 0;
 
@@ -91,8 +91,17 @@ const determineCurrBlurb = () => {
   console.log(Caret.caret.index, "ran from determineCurrBlurb");
 };
 
-const createBlurb = () => {
-  if (Index.words.length > 0 && Index.words.at(-1).str != "") {
+const createBlurb = (enterBool = false) => {
+  //right now create a blurb on a new line is pretty basic
+  //and hardcoded into the following lines of code..
+  if (enterBool) {
+    console.log("rann from enterBool statment..");
+    let currBlurbInfo = getCurrentBlurb();
+    Index.words.forEach((word) => (word.currentBlurb = false));
+    Index.words.push(
+      new WordBlurb(currBlurbInfo[0].startX, currBlurbInfo[0].startY + 18)
+    );
+  } else if (Index.words.length > 0 && Index.words.at(-1).str != "") {
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(
       new WordBlurb(Caret.caret.CurrMouseX, Caret.caret.CurrMouseY)
@@ -113,6 +122,7 @@ const createBlurb = () => {
   //changing caret index here....
 
   Caret.caret.index = 0;
+  console.log(Index.words);
   console.log("bruhhh createBlurb ran", Caret.caret.index);
 };
 
@@ -205,9 +215,3 @@ export {
 // WBA.moveCaret();
 
 // Canvas.updateTextArea();
-
-//morning of 7/13...
-//journal...
-//determine what to work on and scheudle for the day and reach out to some people about jobs stuff...
-//do dishes?? as like a break or something??
-//finish the insertion bugs...
