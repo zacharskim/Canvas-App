@@ -94,13 +94,21 @@ const determineCurrBlurb = () => {
 const createBlurb = (enterBool = false) => {
   //right now create a blurb on a new line is pretty basic
   //and hardcoded into the following lines of code..
+
+  //this feels like it should be abstracted?? (is that word being used correctly??) maybe not idk...
   if (enterBool) {
     console.log("rann from enterBool statment..");
     let currBlurbInfo = getCurrentBlurb();
+
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(
       new WordBlurb(currBlurbInfo[0].startX, currBlurbInfo[0].startY + 18)
     );
+
+    Index.words.at(-1).prevBlurb = currBlurbInfo[0];
+    if (Index.words.at(-3)) {
+      Index.words.at(-3).nextBlurb = currBlurbInfo[0];
+    }
   } else if (Index.words.length > 0 && Index.words.at(-1).str != "") {
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(

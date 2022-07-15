@@ -98,7 +98,20 @@ const handleLengthyOutsideText = () => {
     wb.currentBlurb = false;
     Index.words.push(wb);
   });
+  //making the very last most recently added wb true...
   Index.words.at(-1).currentBlurb = true;
+
+  let len = output.length;
+
+  for (let i = -1; 0 < len; i--) {
+    len -= 1;
+    console.log(i);
+    Index.words.at(i).prevBlurb = Index.words.at(i - 1);
+    Index.words.at(i).nextBlurb = Index.words.at(i + 1);
+  }
+  Index.words.at(-1).nextBlurb = null;
+
+  Index.words.at(-output.length).prevBlurb = null;
 
   //push all to the index.words state ...see what happens i guess..
 };
@@ -125,7 +138,6 @@ const determineWordBlurbMetrics = (arr) => {
     wb.endX = textMetrics.width + wb.startX;
     wb.endY = wb.startY;
   });
-  console.log(arr, "arr");
 };
 
 export {

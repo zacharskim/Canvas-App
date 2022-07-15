@@ -59,9 +59,12 @@ const updateTextArea = () => {
 //TODO fix so that this draws when the user is typing first too.
 //..need it to work w/o cursorLocations or index...
 const drawCursor = (currentBlurb) => {
+  //idea, use Caret.caret.currLocation.x and Caret.caret.currLocation.y to determine the closest cursorLocations
+  //within this function or some helper function!!
   if (typeof currentBlurb != "undefined" && Caret.caret.active) {
     Index.ctx.fillRect(
       currentBlurb.cursorLocations[Caret.caret.index],
+      //need to expandcursor locaitons to include y axis i think....
       Caret.caret.currLocation.y,
       1,
       18

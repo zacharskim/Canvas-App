@@ -13,6 +13,9 @@ class WordBlurb {
     this.id = id++;
     this.charList = [];
     this.width = 0;
+    this.greaterBlurbId = 0;
+    this.prevBlurb = null;
+    this.nextBlurb = null;
   }
 }
 

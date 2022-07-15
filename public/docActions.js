@@ -166,6 +166,35 @@ const handleEnter = (e, currBlurbInfo) => {
   //hitting enter will 1. move the cursor to the startX verticle axis but like -10 startY or something...
   //create a new wordBlurb to be added, similar to mouse down...
   //words is becoming obsolute bc of the the new cloud array...adds a layer of structure...
-  WBA.createBlurb(true);
+  WBA.createBlurb(true); // EDIT THIS SO THAT IT CREATES A LINK BETWEEN BLURBS THAT OCCUR AFTER AN ENTER...
+  //CONSIDER EDGE CASES THO BEFORE IMPLEMENTING....
+
+  //Index.words.at(-1).greaterBlurbId = Index.words.at(-1).greaterBlurbId != null ?  Index.words.at(-1).greaterBlurbId :
 };
-export { copy, paste, cut, handleLeftArrow, handleRightArrow, handleEnter };
+
+const getNearestBlurb = () => {};
+
+const generateCloudID = () => {};
+
+const linked = (wordBlurb) => {
+  if (wordBlurb.nextBlurb || wordBlurb.prevBlurb) {
+    return true;
+  }
+  return false;
+};
+
+//kinda starting a navigationsection here...
+//random naviagtion thoughts: modes will be normal typing / caret naviagtion within a wordblurb/greaterBlurb
+//then naviagtion 1 which will be a free roaming octopus which turns into the caret if it hits a wordBlurb
+//then naviagtion 2 which will be a thing that just sends you to the nearestBlurb in either the up/down/left/right
+//directions...it also centers the viewport on
+
+export {
+  copy,
+  paste,
+  cut,
+  handleLeftArrow,
+  handleRightArrow,
+  handleEnter,
+  getNearestBlurb,
+};
