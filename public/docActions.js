@@ -172,8 +172,6 @@ const handleEnter = (e, currBlurbInfo) => {
   //Index.words.at(-1).greaterBlurbId = Index.words.at(-1).greaterBlurbId != null ?  Index.words.at(-1).greaterBlurbId :
 };
 
-const getNearestBlurb = () => {};
-
 const generateCloudID = () => {};
 
 const linked = (wordBlurb) => {
@@ -183,18 +181,4 @@ const linked = (wordBlurb) => {
   return false;
 };
 
-//kinda starting a navigationsection here...
-//random naviagtion thoughts: modes will be normal typing / caret naviagtion within a wordblurb/greaterBlurb
-//then naviagtion 1 which will be a free roaming octopus which turns into the caret if it hits a wordBlurb
-//then naviagtion 2 which will be a thing that just sends you to the nearestBlurb in either the up/down/left/right
-//directions...it also centers the viewport on
-
-export {
-  copy,
-  paste,
-  cut,
-  handleLeftArrow,
-  handleRightArrow,
-  handleEnter,
-  getNearestBlurb,
-};
+export { copy, paste, cut, handleLeftArrow, handleRightArrow, handleEnter };

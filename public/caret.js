@@ -17,6 +17,7 @@ const caret = {
   selectionActive: false,
   outsideText: "",
   selectedText: [],
+  navMode: "",
   currLocationLive: { x: 0, y: 0 },
 };
 

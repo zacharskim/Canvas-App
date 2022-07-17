@@ -5,13 +5,18 @@ import { BoundingBox } from "./boundingBox.js";
 
 const drawCanvas = () => {
   //clear the old canvas
+  //this line might be kinda moot but leaving it in for now...
   Index.ctx.clearRect(0, 0, Index.canvas.width, Index.canvas.height);
 
   //set context
+
+  //these following two lines of code reset the canvas context etc...
+  Index.canvas.width = window.innerWidth;
+  Index.canvas.height = window.innerHeight;
+
   Index.ctx.font = "16px Times New Roman";
   Index.ctx.textBaseline = "hanging";
 
-  //redraw all the word blurbs...might be a better way to do this...
   Index.words.forEach((blurb) => {
     blurb.boundingBox = new BoundingBox(blurb);
     //when we find a 'Enter' in the charlist we need to treat it differntly??
@@ -19,7 +24,12 @@ const drawCanvas = () => {
     //lots of connecting things rn....
     Index.ctx.fillText(blurb.str, blurb.startX, blurb.startY);
   });
+  let tmp = Index.canvas.width - 150;
+  console.log(Index.canvas.height);
+  //ehh might just have this come and go...like somthing you can check...every so often...
+  //Index.ctx.fillText("Navigation Mode: " + Caret.caret.navMode, tmp, 10);
 
+  //console.log(Index.canvas.width, Index.canvas.height, Index.canvas);
   let currBlurbInfo = Utils.getCurrentBlurb();
   drawCursor(currBlurbInfo[0]);
 
@@ -34,6 +44,7 @@ const drawText = () => {
       blurb.boundingBox = new BoundingBox(blurb);
       Index.ctx.fillText(blurb.str, blurb.startX, blurb.startY);
     });
+
     cloud.cloudBoundingBox = new BoundingBox(cloud);
   });
 };
@@ -61,11 +72,12 @@ const updateTextArea = () => {
 const drawCursor = (currentBlurb) => {
   //idea, use Caret.caret.currLocation.x and Caret.caret.currLocation.y to determine the closest cursorLocations
   //within this function or some helper function!!
+
   if (typeof currentBlurb != "undefined" && Caret.caret.active) {
     Index.ctx.fillRect(
       currentBlurb.cursorLocations[Caret.caret.index],
       //need to expandcursor locaitons to include y axis i think....
-      Caret.caret.currLocation.y,
+      currentBlurb.startY, //replace this line w/ currentBlurb.startY at some point...
       1,
       18
     );
@@ -77,6 +89,7 @@ const drawSelection = (currentBlurb) => {
   //selection should only be able to go to currLocation spots in the array... ***do this first after lunch...DONE
 
   if (typeof currentBlurb != "undefined") {
+    console.log(currentBlurb.width);
     //console.log(Caret.caret.indexOfSelectionStart, "index:", Caret.caret.index);
     //console.log("ran...");
     //console.log(Caret.caret.indexOfSelectionStart, Caret.caret.selectionLength);
