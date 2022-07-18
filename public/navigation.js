@@ -1,14 +1,44 @@
 import * as Caret from "./caret.js";
 import * as Index from "./index.js";
-
+import { sprite } from "./sprite.js";
 //kinda starting a navigationsection here...
 //random naviagtion thoughts: modes will be normal typing / caret naviagtion within a wordblurb/greaterBlurb
 //then naviagtion 1 which will be a free roaming octopus which turns into the caret if it hits a wordBlurb
 //then naviagtion 2 which will be a thing that just sends you to the nearestBlurb in either the up/down/left/right
 //directions...it also centers the viewport on
 
-const setNavMode = () => {};
+//in the future will implement like a fixed sidebar that contains info on text size and stuff like that (nav mode etc..)
+const setNavMode = (e) => {
+  //hitting escape cycles you through the modes...
+  //defualt mode is command mode...can navigate just like vim...well kinda...
+  //can only switch modes from command mode too...
 
+  if (e.key == "Escape") {
+    //enter command mode
+    Caret.caret.navMode = "command";
+
+    console.log("removed eventlistner..");
+    window.removeEventListener("keydown", keyDownListener);
+    window.removeEventListener("keyup", keyUpListener);
+
+    cancelAnimationFrame(requestId);
+    cancelAnimationFrame(requestId2);
+  } else if (e.keyCode == 73 && Caret.caret.navMode == "command") {
+    //i or I
+    //enter insert mode...
+    Caret.caret.navMode = "insert";
+  } else if (e.keyCode == 87 && Caret.caret.navMode == "command") {
+    //w or W
+    Caret.caret.navMode = "draw";
+  } else if (e.keyCode == 79 && Caret.caret.navMode == "command") {
+    //o or O
+    Caret.caret.navMode = "octopus";
+  }
+};
+
+//use the linked function from some other file??? NOTE...
+//this has bugs right now,,, goes to nearest blurb but needs to go to nearest
+//blurb in the direction that we're 'walking'
 const getNearestBlurb = (wordBlurb, e) => {
   //so we are given a blurb, and it's assumed that we have the caret locaiton...
   //define the currentCursor location in terms of xy coords
@@ -128,9 +158,174 @@ const determineNearestxyPoints = (currentCursor, possibleCaretPositions) => {
 //so a user might hit the up arrow key...we can register the caret location at that time
 //and search for the closest point from there...
 
-//random thought...uncerttaintiy when it comes to coding makes me freeze up...
-//similar to fear of failure etc....
+//ehh will refactor these to be more eloquent at a later date...
+var panX = 0;
+var panY = 0;
+var oldMouseX = 0;
+var oldMouseY = 0;
 
-export { handleArrowKey };
+const handleMouseMove = (e) => {
+  let bounds = Index.canvas.getBoundingClientRect();
+  let mouseX = e.clientX - bounds.left;
+  let mouseY = e.clientY - bounds.top;
+
+  if (Caret.caret.mouseDown) {
+    panX += oldMouseX - mouseX;
+    panY += oldMouseY - mouseY;
+  }
+  oldMouseX = mouseX;
+  oldMouseY = mouseY;
+};
+
+//sprite/octopus nav mode...
+
+//tweak sprite
+sprite.SCALED_HEIGHT = sprite.SCALE * sprite.HEIGHT;
+sprite.SCALED_WIDTH = sprite.SCALE * sprite.WIDTH;
+let currentDirection = sprite.FACING_DOWN;
+let currentLoopIndex = 0;
+let frameCount = 0;
+let positionX = 0;
+let positionY = 0;
+let img = new Image();
+
+let keyPresses = {};
+
+const keyDownListener = (event) => {
+  keyPresses[event.key] = true;
+};
+
+const keyUpListener = (event) => {
+  keyPresses[event.key] = false;
+};
+let requestId;
+const loadImage = () => {
+  console.log("loading image...");
+  img.src =
+    "https://opengameart.org/sites/default/files/Green-Cap-Character-16x18.png";
+  img.onload = function () {
+    let requestId = window.requestAnimationFrame(gameLoop);
+  };
+  sprite.imgLoaded = true;
+};
+
+const deLoadImage = () => {
+  sprite.imgLoaded = false;
+  console.log("dawg...", positionX, positionY);
+  Index.ctx.fillRect(
+    positionX,
+    positionY,
+    sprite.WIDTH + 18,
+    sprite.HEIGHT + 18
+  );
+};
+
+const drawFrame = (frameX, frameY, canvasX, canvasY) => {
+  console.log("drawing image...");
+  Index.ctx.drawImage(
+    img,
+    frameX * sprite.WIDTH,
+    frameY * sprite.HEIGHT,
+    sprite.WIDTH,
+    sprite.HEIGHT,
+    canvasX,
+    canvasY,
+    sprite.SCALED_WIDTH,
+    sprite.SCALED_HEIGHT
+  );
+};
+let requestId2;
+const gameLoop = () => {
+  //only erase the canvas where the guy has been more or less...
+  Index.ctx.clearRect(
+    positionX,
+    positionY,
+    sprite.WIDTH + 18,
+    sprite.HEIGHT + 18
+  ); //ehh need to handle this...maybe only clear the sprite location??
+
+  let hasMoved = false;
+
+  if (keyPresses.w) {
+    moveCharacter(0, -sprite.MOVEMENT_SPEED, sprite.FACING_UP);
+
+    hasMoved = true;
+  } else if (keyPresses.s) {
+    moveCharacter(0, sprite.MOVEMENT_SPEED, sprite.FACING_DOWN);
+    hasMoved = true;
+  }
+
+  if (keyPresses.a) {
+    moveCharacter(-sprite.MOVEMENT_SPEED, 0, sprite.FACING_LEFT);
+    hasMoved = true;
+  } else if (keyPresses.d) {
+    moveCharacter(sprite.MOVEMENT_SPEED, 0, sprite.FACING_RIGHT);
+    hasMoved = true;
+  }
+
+  if (hasMoved) {
+    frameCount++;
+
+    if (frameCount >= sprite.FRAME_LIMIT) {
+      frameCount = 0;
+      currentLoopIndex++;
+      if (currentLoopIndex >= sprite.CYCLE_LOOP.length) {
+        currentLoopIndex = 0;
+      }
+    }
+  }
+
+  if (!hasMoved) {
+    currentLoopIndex = 0;
+  }
+
+  drawFrame(
+    sprite.CYCLE_LOOP[currentLoopIndex],
+    currentDirection, //the y i guess...
+    positionX,
+    positionY
+  );
+  requestId2 = window.requestAnimationFrame(gameLoop);
+};
+
+//need to edit this too...
+const moveCharacter = (deltaX, deltaY, direction) => {
+  if (
+    positionX + deltaX > 0 &&
+    positionX + sprite.SCALED_WIDTH + deltaX < Index.canvas.width
+  ) {
+    positionX += deltaX;
+  }
+  if (
+    positionY + deltaY > 0 &&
+    positionY + sprite.SCALED_HEIGHT + deltaY < Index.canvas.height
+  ) {
+    positionY += deltaY;
+  }
+  currentDirection = direction;
+};
+
+export {
+  handleArrowKey,
+  handleMouseMove,
+  panX,
+  panY,
+  setNavMode,
+  keyDownListener,
+  keyUpListener,
+  loadImage,
+  deLoadImage,
+};
 
 //known nav bugs right now...
+
+//code from SO, maybe make the user hold for for a sec if they want to move a wordblurb...or we could just make them switch modes...duh...
+//drawing mode? or?
+// selector.addEventListener("mousedown", function (event) {
+//   // simulating hold event
+//   setTimeout(function () {
+//     // You are now in a hold state, you can do whatever you like!
+//   }, 500);
+// });
+
+//uhh spend some time writing and planning out your days remaing at RC this afternoon/later...
