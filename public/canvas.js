@@ -2,6 +2,7 @@ import * as Index from "./index.js";
 import * as Utils from "./utils.js";
 import * as Caret from "./caret.js";
 import { BoundingBox } from "./boundingBox.js";
+import * as Nav from "./navigation.js";
 
 const drawCanvas = () => {
   //clear the old canvas
@@ -22,10 +23,42 @@ const drawCanvas = () => {
     //when we find a 'Enter' in the charlist we need to treat it differntly??
     //is there a more elegant way to look at this...?? draw this all out??
     //lots of connecting things rn....
-    Index.ctx.fillText(blurb.str, blurb.startX, blurb.startY);
+
+    //drawing the wordblurbs...
+
+    Index.ctx.fillText(
+      blurb.str,
+      blurb.startX - Nav.panX,
+      blurb.startY - Nav.panY
+    );
+
+    // if (
+    //   xMax > 0 &&
+    //   xMin < Index.canvas.width &&
+    //   yMax > 0 &&
+    //   yMin < Index.canvas.height
+    // ) {
+    //   Index.ctx.fillText(
+    //     blurb.str,
+    //     blurb.startX - Nav.panX,
+    //     blurb.startY - Nav.panY
+    //   );
+    // }
   });
-  let tmp = Index.canvas.width - 150;
-  console.log(Index.canvas.height);
+
+  // ctx.fillStyle = "black";
+  // //for each box...draw it...each changes when panx or pany changes...
+  // for (var i = 0; i < boxArray.length; ++i) {
+  //   box = boxArray[i];
+
+  //   //box no longer shows up if it's outside of the boundries of the viewport...
+  //   if (xMax > 0 && xMin < imageWidth && yMax > 0 && yMin < imageHeight) {
+  //     box.draw();
+  //   }
+  // }
+
+  //let tmp = Index.canvas.width - 150;
+  //console.log(Index.canvas.height);
   //ehh might just have this come and go...like somthing you can check...every so often...
   //Index.ctx.fillText("Navigation Mode: " + Caret.caret.navMode, tmp, 10);
 
@@ -89,7 +122,7 @@ const drawSelection = (currentBlurb) => {
   //selection should only be able to go to currLocation spots in the array... ***do this first after lunch...DONE
 
   if (typeof currentBlurb != "undefined") {
-    console.log(currentBlurb.width);
+    //console.log(currentBlurb.width);
     //console.log(Caret.caret.indexOfSelectionStart, "index:", Caret.caret.index);
     //console.log("ran...");
     //console.log(Caret.caret.indexOfSelectionStart, Caret.caret.selectionLength);

@@ -7,123 +7,79 @@ import * as Canvas from "./canvas.js";
 import * as DA from "./docActions.js";
 import * as WBA from "./wordBlurbActions.js";
 import * as Nav from "./navigation.js";
+import { sprite } from "./sprite.js";
 
 const handleKeyDown = (e) => {
   let currBlurbInfo = Utils.getCurrentBlurb();
 
-  switch (e.keyCode) {
-    case 8: //backspace
-      WBA.activateCaret();
-      WBA.handleBackSpace(e, currBlurbInfo);
-      WBA.moveCaret(e, currBlurbInfo);
+  //only changes anything if command is hit...
+  Nav.setNavMode(e);
 
-      Canvas.updateTextArea();
-      break;
-    case 13: //enter
-      WBA.activateCaret();
-      DA.handleEnter(e, currBlurbInfo);
-      WBA.moveCaret(e, currBlurbInfo);
-      Canvas.updateTextArea();
-      break;
-
-    case 16:
-      break;
-
-    case 37:
-      WBA.activateCaret();
-      DA.handleLeftArrow(e);
-      Canvas.drawCanvas();
-      break;
-
-    case 39:
-      WBA.activateCaret();
-      DA.handleRightArrow(e);
-      Canvas.drawCanvas();
-      break;
-    case 38:
-    case 40:
-      WBA.activateCaret();
-      Nav.handleArrowKey(currBlurbInfo[0], e);
-      Canvas.drawCanvas();
-      break;
-
-    // case 38:
-    //   //this just draws a bounding box and is mainly for testing, remove later
-    //   currBlurbInfo[0].boundingBox.draw(Index.ctx);
-    //   break;
-
-    // //the following lines need to be refactored at some point...
-    // case 39: //right arrow
-    //   WBA.activateCaret();
-    //   DA.handleRightArrow(e); //here is where we'd check if the shift is pressed as well..
-    //   //console.log(caret.currLocation.x);
-    //   Canvas.drawCanvas();
-    //   break;
-    // case 37: //left arrow
-    // WBA.activateCaret();
-    // DA.handleLeftArrow(e);
-    //   //todo: make this bug free, and work on whichever blurb your currently click on...
-    //   Canvas.drawCanvas();
-    //   break;
-    // case 40: //down arrow
-    //   break;
-
-    //down to here... the new handleArrowKey() function needs to account for these...
-
-    //need to abstract these i think...maybe similar to the above like
-
-    // case 67: //c
-    // case 86: //v
-    // case 88: //x
-    //   UknownModule.handleTextEdit();
-    //   break;
-    case 67: //c
-      if (e.metaKey) {
-        DA.copy();
-        Canvas.updateTextArea();
-      } else {
-        Index.words[currBlurbInfo[1]].str = currBlurbInfo[0].str + e.key;
-        Index.words[currBlurbInfo[1]].charList.push(e.key);
+  if (Caret.caret.navMode == "insert") {
+    switch (e.keyCode) {
+      case 8: //backspace
+        WBA.activateCaret();
+        WBA.handleBackSpace(e, currBlurbInfo);
+        WBA.moveCaret(e, currBlurbInfo);
 
         Canvas.updateTextArea();
-      }
-
-      break;
-
-    case 86: //v
-      if (e.metaKey) {
-        DA.paste();
+        break;
+      case 13: //enter
+        WBA.activateCaret();
+        DA.handleEnter(e, currBlurbInfo);
+        WBA.moveCaret(e, currBlurbInfo);
         Canvas.updateTextArea();
-      } else {
-        Index.words[currBlurbInfo[1]].str = currBlurbInfo[0].str + e.key;
-        Index.words[currBlurbInfo[1]].charList.push(e.key);
+        break;
+
+      case 16: //shift...
+        break;
+
+      case 37:
+        WBA.activateCaret();
+        DA.handleLeftArrow(e);
+        Canvas.drawCanvas();
+        break;
+
+      case 39:
+        WBA.activateCaret();
+        DA.handleRightArrow(e);
+        Canvas.drawCanvas();
+        break;
+
+      case 38:
+      case 40:
+        WBA.activateCaret();
+        Nav.handleArrowKey(currBlurbInfo[0], e);
+        Canvas.drawCanvas();
+        break;
+
+      //need to abstract these i think...maybe similar to the above like
+
+      case 67: //c
+      case 86: //v
+      case 88: //x
+        DA.handleTextEdit(e, currBlurbInfo);
+        Canvas.updateTextArea();
+        break;
+
+      case 91: //meta
+        break;
+
+      default: //popping the old string,,, adding the new one...
+        WBA.activateCaret();
+        WBA.handleNewChar(e, currBlurbInfo);
+
+        WBA.moveCaret(e, currBlurbInfo);
 
         Canvas.updateTextArea();
-      }
-      break;
-
-    case 88: //x
-      if (e.metaKey) {
-        DA.cut();
-      } else {
-        Index.words[currBlurbInfo[1]].str = currBlurbInfo[0].str + e.key;
-        Index.words[currBlurbInfo[1]].charList.push(e.key);
-
-        Canvas.updateTextArea();
-      }
-      break;
-
-    case 91: //meta
-      break;
-
-    default: //popping the old string,,, adding the new one...
-      WBA.activateCaret();
-      WBA.handleNewChar(e, currBlurbInfo);
-
-      WBA.moveCaret(e, currBlurbInfo);
-
-      Canvas.updateTextArea();
-      break;
+        break;
+    }
+  } else if (Caret.caret.navMode == "octopus") {
+    if (!sprite.imgLoaded) {
+      Nav.loadImage();
+    }
+    window.addEventListener("keydown", Nav.keyDownListener);
+    window.addEventListener("keyup", Nav.keyUpListener);
   }
 };
 

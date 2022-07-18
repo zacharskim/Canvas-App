@@ -8,11 +8,7 @@ const getCurrentBlurb = () => {
     (blurb) => blurb.id == currentBlurb[0].id
   );
 
-  if (typeof currentBlurb != "undefined") {
-    return [currentBlurb[0], currBlurbIndex];
-  } else {
-    return "No currentBlurb";
-  }
+  return [currentBlurb[0], currBlurbIndex];
 };
 
 const binarySearch = (found, target) => {
@@ -54,6 +50,12 @@ const getClosestInt = (target, arr) => {
   return res;
 };
 
+const adjustWordBlurbWidth = () => {
+  //only allow greater wordBlurbs to be adjusted together...
+  //indvidual wordblourbs can be adjusted by themselves...
+};
+
+//need to fix duplicate letters +
 const handleLengthyOutsideText = () => {
   let tempCharList = Caret.caret.outsideText.split("");
   let i = 0;
@@ -63,9 +65,12 @@ const handleLengthyOutsideText = () => {
     tempStr += tempCharList[i];
     let textMetrics = Index.ctx.measureText(tempStr);
 
+    //mostly just modify these lines of code to dynamically shape wordBlurb...
     if (textMetrics.width >= 400 && output.length == 0) {
       //create a wordBlurb with the first ~400 chunk
       //set tempstr to '' again
+
+      //need to check for collisions at some point...
       output.push(
         new WordBlurb(
           Caret.caret.currLocationLive.x,
@@ -90,9 +95,8 @@ const handleLengthyOutsideText = () => {
   output.push(new WordBlurb(output.at(-1).startX, output.at(-1).startY + 18));
   output.at(-1).str = tempStr;
   output.at(-1).charList = tempStr.split("");
-  console.log("output", output);
+
   determineWordBlurbMetrics(output);
-  console.log("new output", output);
   //set currentBlurb to false for all but last one...
   output.forEach((wb) => {
     wb.currentBlurb = false;
@@ -112,8 +116,6 @@ const handleLengthyOutsideText = () => {
   Index.words.at(-1).nextBlurb = null;
 
   Index.words.at(-output.length).prevBlurb = null;
-
-  //push all to the index.words state ...see what happens i guess..
 };
 
 const determineWordBlurbMetrics = (arr) => {

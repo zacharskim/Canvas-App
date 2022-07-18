@@ -181,4 +181,27 @@ const linked = (wordBlurb) => {
   return false;
 };
 
-export { copy, paste, cut, handleLeftArrow, handleRightArrow, handleEnter };
+const handleTextEdit = (e, currBlurbInfo) => {
+  if (e.meta && e.key == "c") {
+    copy();
+  } else if (e.meta && e.key == "x") {
+    cut();
+  } else if (e.meta && e.key == "v") {
+    paste();
+  } else {
+    WBA.activateCaret();
+    WBA.handleNewChar(e, currBlurbInfo);
+
+    WBA.moveCaret(e, currBlurbInfo);
+  }
+};
+
+export {
+  copy,
+  paste,
+  cut,
+  handleLeftArrow,
+  handleRightArrow,
+  handleEnter,
+  handleTextEdit,
+};

@@ -40,6 +40,7 @@ const moveCaret = (e, currBlurbInfo) => {
   } else {
     Caret.caret.index += 1;
   }
+  //idk if it's best to move the caret by index...i feel like
 
   //TODO fix bug where c, x, v don't move the caret...
   //TODO fix bug where caret does not move backwards...
