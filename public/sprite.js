@@ -10,8 +10,12 @@ const sprite = {
   FACING_LEFT: 2,
   FACING_RIGHT: 3,
   FRAME_LIMIT: 12, //instead of drawing 60 times a second we draw every 12 animate requests frames...
-  MOVEMENT_SPEED: 5,
+  MOVEMENT_SPEED: 4,
   imgLoaded: false,
+  currLocation: { x: 0, y: 0 },
+  hitBoundry: false,
+  direction: 0,
+  recentering: false,
 };
 
 //code is adapted/from here: https://dev.to/martyhimmel/moving-a-sprite-sheet-character-with-javascript-3adg

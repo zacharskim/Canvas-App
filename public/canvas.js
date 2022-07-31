@@ -2,102 +2,63 @@ import * as Index from "./index.js";
 import * as Utils from "./utils.js";
 import * as Caret from "./caret.js";
 import { BoundingBox } from "./boundingBox.js";
-import * as Nav from "./navigation.js";
+import * as Format from "./format.js";
 
+//undo/redo....
 const drawCanvas = () => {
-  //clear the old canvas
-  //this line might be kinda moot but leaving it in for now...
-  Index.ctx.clearRect(0, 0, Index.canvas.width, Index.canvas.height);
-
-  //set context
-
   //these following two lines of code reset the canvas context etc...
   Index.canvas.width = window.innerWidth;
   Index.canvas.height = window.innerHeight;
 
   Index.ctx.font = "16px Times New Roman";
+  Index.ctx.fillStyle = "white";
   Index.ctx.textBaseline = "hanging";
 
-  Index.words.forEach((blurb) => {
-    blurb.boundingBox = new BoundingBox(blurb);
-    //when we find a 'Enter' in the charlist we need to treat it differntly??
-    //is there a more elegant way to look at this...?? draw this all out??
-    //lots of connecting things rn....
-
-    //drawing the wordblurbs...
-
-    Index.ctx.fillText(
-      blurb.str,
-      blurb.startX - Nav.panX,
-      blurb.startY - Nav.panY
-    );
-
-    // if (
-    //   xMax > 0 &&
-    //   xMin < Index.canvas.width &&
-    //   yMax > 0 &&
-    //   yMin < Index.canvas.height
-    // ) {
-    //   Index.ctx.fillText(
-    //     blurb.str,
-    //     blurb.startX - Nav.panX,
-    //     blurb.startY - Nav.panY
-    //   );
-    // }
-  });
-
-  // ctx.fillStyle = "black";
-  // //for each box...draw it...each changes when panx or pany changes...
-  // for (var i = 0; i < boxArray.length; ++i) {
-  //   box = boxArray[i];
-
-  //   //box no longer shows up if it's outside of the boundries of the viewport...
-  //   if (xMax > 0 && xMin < imageWidth && yMax > 0 && yMin < imageHeight) {
-  //     box.draw();
-  //   }
-  // }
-
-  //let tmp = Index.canvas.width - 150;
-  //console.log(Index.canvas.height);
-  //ehh might just have this come and go...like somthing you can check...every so often...
-  //Index.ctx.fillText("Navigation Mode: " + Caret.caret.navMode, tmp, 10);
-
-  //console.log(Index.canvas.width, Index.canvas.height, Index.canvas);
   let currBlurbInfo = Utils.getCurrentBlurb();
+  drawText(currBlurbInfo);
+
+  drawImages();
+  //drawFormatting();
+
   drawCursor(currBlurbInfo[0]);
 
   drawSelection(currBlurbInfo[0]);
+
+  //Format.underline(currBlurbInfo[0]);
 };
 
-const drawText = () => {
-  //for each wordBlurb in a WordCloud
+const drawText = (currBlurbInfo) => {
+  //for each wordBlurb
   //draw the wordblurb...
-  Index.clouds.forEach((cloud) => {
-    cloud.forEach((blurb) => {
-      blurb.boundingBox = new BoundingBox(blurb);
-      Index.ctx.fillText(blurb.str, blurb.startX, blurb.startY);
-    });
 
-    cloud.cloudBoundingBox = new BoundingBox(cloud);
+  //this is where formatting will need to be implemented for every Character
+  //i think...
+  Index.words.forEach((blurb) => {
+    blurb.boundingBox = new BoundingBox(blurb);
+    let index = 0;
+    blurb.cursorLocations.forEach((loc) => {
+      //for each space between cursorLocations, we assign a
+      //specfic formatting rules based on each indvidual character
+      //allows us to bold some parts of a wordBlurb but not the whole thing
+
+      Format.setFormat(loc, currBlurbInfo, index);
+
+      if (typeof blurb.charList[index] != "undefined") {
+        //make this so it only temporary changes the context???
+        Format.setIndividualCharFormat(index, currBlurbInfo);
+        Index.ctx.fillText(blurb.charList[index], loc, blurb.startY);
+      }
+      index++;
+    });
   });
 };
 
-const updateTextArea = () => {
-  let currBlurbInfo = Utils.getCurrentBlurb();
+//const drawFormatting = () => {};
 
-  if (currBlurbInfo[0].startX == 0 && currBlurbInfo[0].startY == 0) {
-    currBlurbInfo[0].startX = CurrMouseX;
-    currBlurbInfo[0].startY = CurrMouseY;
-  }
-
-  let textMetrics = Index.ctx.measureText(currBlurbInfo[0].str);
-
-  currBlurbInfo[0].endX = textMetrics.width + currBlurbInfo[0].startX;
-  currBlurbInfo[0].endY = currBlurbInfo[0].startY;
-
-  //need to update the actual words array tho...
-  Index.words[currBlurbInfo[1]] = currBlurbInfo[0];
-  drawCanvas();
+const drawImages = () => {
+  Index.images.forEach((imgObj) => {
+    Index.ctx.drawImage(imgObj.img, imgObj.x, imgObj.y);
+  });
 };
 
 //TODO fix so that this draws when the user is typing first too.
@@ -106,14 +67,142 @@ const drawCursor = (currentBlurb) => {
   //idea, use Caret.caret.currLocation.x and Caret.caret.currLocation.y to determine the closest cursorLocations
   //within this function or some helper function!!
 
-  if (typeof currentBlurb != "undefined" && Caret.caret.active) {
+  if (
+    Caret.caret.navMode == "command" &&
+    Caret.caret.firstDraw == false &&
+    Caret.caret.active &&
+    !Caret.caret.vimCaretinBlurb
+  ) {
+    if (typeof currentBlurb != "undefined") {
+      //if there is a previous locaiton,, but the cursor there...
+      //console.log("ran...");
+      Caret.caret.vimCaretLoc.x = Caret.caret.currLocation.x;
+      Caret.caret.vimCaretLoc.y = Caret.caret.currLocation.y;
+      Index.ctx.fillRect(
+        Caret.caret.currLocation.x,
+        Caret.caret.currLocation.y,
+        9,
+        18
+      );
+    } else {
+      Caret.caret.vimCaretLoc = {
+        x: Caret.caret.currLocationLive.x,
+        y: Caret.caret.currLocationLive.y,
+      };
+      Index.ctx.fillRect(
+        Caret.caret.currLocationLive.x,
+        //need to expandcursor locaitons to include y axis i think....
+        Caret.caret.currLocationLive.y,
+        9,
+        18
+      );
+    }
+
+    Caret.caret.firstDraw = true;
+  } else if (
+    Caret.caret.navMode == "command" &&
+    Caret.caret.active &&
+    !Caret.caret.vimCaretinBlurb
+  ) {
     Index.ctx.fillRect(
-      currentBlurb.cursorLocations[Caret.caret.index],
+      Caret.caret.vimCaretLoc.x,
       //need to expandcursor locaitons to include y axis i think....
-      currentBlurb.startY, //replace this line w/ currentBlurb.startY at some point...
+      Caret.caret.vimCaretLoc.y,
+      9,
+      18
+    );
+  } else if (
+    Caret.caret.navMode == "command" &&
+    Caret.caret.active &&
+    Caret.caret.vimCaretinBlurb
+  ) {
+    if (
+      currentBlurb.cursorLocations.length - 1 == Caret.caret.vimIndex ||
+      Caret.caret.vimIndex == 0
+    ) {
+      Index.ctx.save();
+      Index.ctx.globalAlpha = 0.3;
+      //console.log("run edge case.....", Caret.caret.vimIndex);
+      Index.ctx.fillRect(
+        currentBlurb.cursorLocations[Caret.caret.vimIndex - 1],
+        currentBlurb.startY,
+        9,
+        18
+      );
+      Index.ctx.restore();
+    } else {
+      Index.ctx.save();
+      Index.ctx.globalAlpha = 0.3;
+      //console.log("run normally..", Caret.caret.vimIndex);
+      Index.ctx.fillRect(
+        currentBlurb.cursorLocations[Caret.caret.vimIndex],
+        currentBlurb.startY,
+        Index.ctx.measureText(currentBlurb.charList[Caret.caret.vimIndex])
+          .width,
+        18
+      );
+      Index.ctx.restore();
+    }
+  }
+  if (
+    typeof currentBlurb != "undefined" &&
+    Caret.caret.active &&
+    Caret.caret.navMode == "insert"
+  ) {
+    //clean this shit up,,, write about the logic etc...insert will always follow
+    //command mode...
+    //draw normal caret...
+
+    //console.log("running...OKA??");
+    if (currentBlurb.cursorLocations.length == Caret.caret.index) {
+      Caret.caret.currLocation.x =
+        currentBlurb.cursorLocations[Caret.caret.index - 1];
+      Caret.caret.currLocation.y = currentBlurb.startY;
+      Index.ctx.fillRect(
+        currentBlurb.cursorLocations[Caret.caret.index - 1],
+        currentBlurb.startY,
+        1,
+        18
+      );
+    } else {
+      //console.log("running... hmmm??");
+      Caret.caret.currLocation.x =
+        currentBlurb.cursorLocations[Caret.caret.index];
+      Caret.caret.currLocation.y = currentBlurb.startY;
+      Index.ctx.fillRect(
+        currentBlurb.cursorLocations[Caret.caret.index],
+        currentBlurb.startY,
+        1,
+        18
+      );
+    }
+  } else if (
+    Caret.caret.firstDraw == false &&
+    Caret.caret.navMode == "insert"
+  ) {
+    // console.log("running... MOOO??"); idk if this even runs lmao
+    //refactor at some point....
+    Caret.caret.initialCoords = {
+      x: Caret.caret.vimCaretLoc.x,
+      y: Caret.caret.vimCaretLoc.y,
+    };
+    Index.ctx.fillRect(
+      Caret.caret.initialCoords.x,
+      Caret.caret.initialCoords.y,
       1,
       18
     );
+    Caret.caret.firstDraw = true;
+  } else if (typeof currentBlurb != "undefined" && currentBlurb.str == "") {
+    if (Caret.caret.initialCoords.x != 0) {
+      // console.log("running... YEET");
+      Index.ctx.fillRect(
+        Caret.caret.initialCoords.x,
+        Caret.caret.initialCoords.y,
+        1,
+        18
+      );
+    }
   }
 };
 
@@ -122,13 +211,9 @@ const drawSelection = (currentBlurb) => {
   //selection should only be able to go to currLocation spots in the array... ***do this first after lunch...DONE
 
   if (typeof currentBlurb != "undefined") {
-    //console.log(currentBlurb.width);
-    //console.log(Caret.caret.indexOfSelectionStart, "index:", Caret.caret.index);
-    //console.log("ran...");
-    //console.log(Caret.caret.indexOfSelectionStart, Caret.caret.selectionLength);
     Index.ctx.save();
-    Index.ctx.fillStyle = "#FF0000";
-    Index.ctx.globalAlpha = 0.2;
+    Index.ctx.fillStyle = "#99CCFF";
+    Index.ctx.globalAlpha = 0.3;
     Index.ctx.fillRect(
       currentBlurb.cursorLocations[Caret.caret.indexOfSelectionStart],
       Caret.caret.currLocation.y,
@@ -143,4 +228,4 @@ const drawSelection = (currentBlurb) => {
 
 //should draw selection go here??
 
-export { drawCanvas, updateTextArea, drawCursor, drawSelection };
+export { drawCanvas, drawSelection };

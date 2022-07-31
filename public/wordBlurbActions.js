@@ -4,7 +4,7 @@ import * as Caret from "./caret.js";
 import * as Utils from "./utils.js";
 import * as Canvas from "./canvas.js";
 import { WordBlurb } from "./wordBlurb.js";
-
+import { sprite } from "./sprite.js";
 const insertCursor = () => {
   //this function inserts the currsor into the current word blurb...
   //the currentBlurb may be brand new or it may have text in it...
@@ -27,23 +27,17 @@ const insertCursor = () => {
   Caret.caret.currLocation.x = Index.words[currBlurbInfo[1]].cursorLocations.at(
     Caret.caret.index
   );
-  console.log(Caret.caret.index, "from insertCursor");
+  //  console.log(Caret.caret.index, "from insertCursor");
 };
 
 const moveCaret = (e, currBlurbInfo) => {
   //this function move the caret along the word blurb as characters are inserted...
 
-  //Caret.caret.index = Index.words[currBlurbInfo[1]].charList.length - 1; //this shit,,, figure this out after dinner...
   if (e.keyCode == 8) {
     Caret.caret.index -= 1;
-    console.log(Caret.caret.index);
   } else {
     Caret.caret.index += 1;
   }
-  //idk if it's best to move the caret by index...i feel like
-
-  //TODO fix bug where c, x, v don't move the caret...
-  //TODO fix bug where caret does not move backwards...
 };
 
 //dealing with displaying the cursor when it's active vs not active...
@@ -89,16 +83,16 @@ const determineCurrBlurb = () => {
 
     //if you don't click on a blurb then you create a new one,
   }
-  console.log(Caret.caret.index, "ran from determineCurrBlurb");
+  //  console.log(Caret.caret.index, "ran from determineCurrBlurb");
 };
 
 const createBlurb = (enterBool = false) => {
   //right now create a blurb on a new line is pretty basic
   //and hardcoded into the following lines of code..
 
-  //this feels like it should be abstracted?? (is that word being used correctly??) maybe not idk...
+  //this feels like it could be better...
   if (enterBool) {
-    console.log("rann from enterBool statment..");
+    //console.log("rann from enterBool statment..");
     let currBlurbInfo = getCurrentBlurb();
 
     Index.words.forEach((word) => (word.currentBlurb = false));
@@ -111,28 +105,31 @@ const createBlurb = (enterBool = false) => {
       Index.words.at(-3).nextBlurb = currBlurbInfo[0];
     }
   } else if (Index.words.length > 0 && Index.words.at(-1).str != "") {
+    //console.log("first ??");
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(
-      new WordBlurb(Caret.caret.CurrMouseX, Caret.caret.CurrMouseY)
+      new WordBlurb(Caret.caret.vimCaretLoc.x, Caret.caret.vimCaretLoc.y)
     );
   } else if (Index.words.length > 0) {
+    // console.log("ran??");
     Index.words.pop();
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(
-      new WordBlurb(Caret.caret.CurrMouseX, Caret.caret.CurrMouseY)
+      new WordBlurb(Caret.caret.vimCaretLoc.x, Caret.caret.vimCaretLoc.y)
     );
 
     //this may mess w/ the currentBlurb function just keep an eye on it...
   } else {
+    //console.log("first no??");
     Index.words.push(
-      new WordBlurb(Caret.caret.CurrMouseX, Caret.caret.CurrMouseY)
+      new WordBlurb(Caret.caret.vimCaretLoc.x, Caret.caret.vimCaretLoc.y)
     );
   }
   //changing caret index here....
 
   Caret.caret.index = 0;
-  console.log(Index.words);
-  console.log("bruhhh createBlurb ran", Caret.caret.index);
+  //console.log(Index.words, "wordblurb list rn...");
+  //console.log("bruhhh createBlurb ran", Caret.caret.index);
 };
 
 //need to account for caret movememnt here?? idk...or updating canvas or somethihng??
@@ -140,6 +137,9 @@ const handleBackSpace = (e, currBlurbInfo) => {
   deleteChar(e, currBlurbInfo);
   let textMetrics = Index.ctx.measureText(currBlurbInfo[0].str);
   Index.words[currBlurbInfo[1]].length = textMetrics.width;
+  Index.words[currBlurbInfo[1]].endX =
+    textMetrics.width + currBlurbInfo[0].startX;
+  Index.words[currBlurbInfo[1]].endY = currBlurbInfo[0].startY;
 
   generateCursorLocations(currBlurbInfo);
 };
@@ -148,19 +148,19 @@ const insertChar = (e, currBlurbInfo) => {
   //adding a char to the currentBlurb string...so glad finally go this working...
   //wish i had realized charList was there and easier to edit an array than a string most times...
   //not super clear you can build an array through splicing (but not replacing just inserting...)
-  Index.words[currBlurbInfo[1]].charList.splice(
-    Caret.caret.index + 1,
-    0,
-    e.key
-  );
-  Index.words[currBlurbInfo[1]].str =
-    Index.words[currBlurbInfo[1]].charList.join("");
+
+  if (typeof currBlurbInfo[0] != "undefined") {
+    Index.words[currBlurbInfo[1]].charList.splice(Caret.caret.index, 0, e.key);
+
+    Index.words[currBlurbInfo[1]].str =
+      Index.words[currBlurbInfo[1]].charList.join("");
+  }
 };
 
 const deleteChar = (e, currBlurbInfo) => {
   //replaced the char behind the caret index with ''(prolly will not work for start of the string)
 
-  Index.words[currBlurbInfo[1]].charList.splice(Caret.caret.index, 1);
+  Index.words[currBlurbInfo[1]].charList.splice(Caret.caret.index - 1, 1);
 
   //having to filter Enters out of charList now...uhh refactor after lunch / appointment...
   let toStr = Index.words[currBlurbInfo[1]].charList.filter(
@@ -172,33 +172,40 @@ const deleteChar = (e, currBlurbInfo) => {
 const generateCursorLocations = (currBlurbInfo) => {
   //loop through and dynamically change the width to set the cursorLocations...
   // THIS WILL NEED TO ACCOUNT FOR ENTERs NOW...
-  let tempCharStr = Index.words[currBlurbInfo[1]].str;
-  Index.words[currBlurbInfo[1]].cursorLocations = [];
-  Index.words[currBlurbInfo[1]].charList.forEach((c) => {
-    //width is dynamic...
-    let textMetrics = Index.ctx.measureText(tempCharStr);
-    Index.words[currBlurbInfo[1]].cursorLocations.push(
-      textMetrics.width + currBlurbInfo[0].startX
-    );
-    tempCharStr = tempCharStr.slice(0, -1);
-  });
-  //borred this logic from the paste function,,, maybe could be refactored at some point???
-  Index.words[currBlurbInfo[1]].cursorLocations =
-    Index.words[currBlurbInfo[1]].cursorLocations.reverse();
+
+  if (typeof currBlurbInfo[0] != "undefined") {
+    let tempCharStr = currBlurbInfo[0].str;
+    currBlurbInfo[0].cursorLocations = [];
+    currBlurbInfo[0].charList.forEach((c) => {
+      //width is dynamic...
+      let textMetrics = Index.ctx.measureText(tempCharStr);
+      currBlurbInfo[0].cursorLocations.push(
+        textMetrics.width + currBlurbInfo[0].startX
+      );
+      tempCharStr = tempCharStr.slice(0, -1);
+    });
+
+    currBlurbInfo[0].cursorLocations =
+      currBlurbInfo[0].cursorLocations.reverse();
+
+    //add the first index
+
+    currBlurbInfo[0].cursorLocations.unshift(currBlurbInfo[0].startX);
+  }
 
   //adds the first index...not super elegant but works for now...also this fixes the cursor
   //not showing up while tpying error?? kinda...breaks insertion and deletions tho...
-  //   Index.words[currBlurbInfo[1]].cursorLocations.splice(
-  //     0,
-  //     0,
-  //     currBlurbInfo[0].startX
-  //   );
 };
 
 const handleNewChar = (e, currBlurbInfo) => {
   insertChar(e, currBlurbInfo);
-  let textMetrics = Index.ctx.measureText(currBlurbInfo[0].str);
-  Index.words[currBlurbInfo[1]].length = textMetrics.width;
+  if (typeof currBlurbInfo[0] != "undefined") {
+    let textMetrics = Index.ctx.measureText(currBlurbInfo[0].str);
+    Index.words[currBlurbInfo[1]].length = textMetrics.width;
+    Index.words[currBlurbInfo[1]].endX =
+      textMetrics.width + currBlurbInfo[0].startX;
+    Index.words[currBlurbInfo[1]].endY = currBlurbInfo[0].startY;
+  }
   //need to update this in the right spot...then can just stirng letters together
   //idk why i didn't do that earlier it seems easier,,, just string the letters togehter.,...NO NEED TO EDIT STRING DIRECTLY>>>..
 
@@ -218,6 +225,7 @@ export {
   activateCaret,
   handleNewChar,
   handleBackSpace,
+  generateCursorLocations,
 };
 
 //push cursor along word blurb

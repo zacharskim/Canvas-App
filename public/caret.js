@@ -1,12 +1,11 @@
-// let CurrMouseX;
-// let CurrMouseY;
-import * as Index from "./index.js";
-
+//is this getting out of control? idk
 const caret = {
   active: true,
   timeSinceLastActivity: 0,
   CurrMouseX: 0,
   CurrMouseY: 0,
+  deltaX: 0,
+  deltaY: 0,
   currLocation: { x: -100, y: -100 },
   index: 0,
   indexOfSelectionStart: -100,
@@ -19,16 +18,13 @@ const caret = {
   selectedText: [],
   navMode: "",
   currLocationLive: { x: 0, y: 0 },
+  firstDraw: false,
+  vimCaretLoc: { x: 0, y: 0 },
+  initialCoords: { x: 0, y: 0 },
+  vimCaretinBlurb: false,
+  vimIndex: 0,
+  italicize: false,
+  bold: false,
 };
 
-const getCaretLocation = () => {
-  if (caret.index + 1 > caret.indexOfSelectionStart) {
-    caret.index = caret.indexOfSelectionStart;
-  } else if (caret.index - 1 < caret.indexOfSelectionStart) {
-    caret.index = caret.indexOfSelectionStart;
-  } else {
-    //
-  }
-};
-
-export { getCaretLocation, caret };
+export { caret };

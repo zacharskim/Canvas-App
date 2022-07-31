@@ -7,6 +7,8 @@ import {
 import * as Caret from "./caret.js";
 import { WordBlurb } from "./wordBlurb.js";
 import * as WBA from "./wordBlurbActions.js";
+import * as Format from "./format.js";
+
 const copy = () => {
   determineSelectedData(Caret.caret.indexOfSelectionStart, Caret.caret.index);
   console.log("copy is running...");
@@ -20,6 +22,21 @@ const cut = () => {
 addEventListener("paste", (event) => {
   var clipText = event.clipboardData.getData("Text");
   Caret.caret.outsideText = clipText;
+
+  //paste an image in maybe....
+  let objectUrl = URL.createObjectURL(event.clipboardData.files[0]);
+  //console.log(objectUrl);
+  let img = new Image();
+  img.src = objectUrl;
+  if (typeof objectUrl != "undefined" && Caret.caret.navMode == "command") {
+    img.onload = function () {
+      Index.images.push({
+        img: img,
+        x: Caret.caret.vimCaretLoc.x,
+        y: Caret.caret.vimCaretLoc.y,
+      });
+    };
+  }
 });
 
 const paste = () => {
@@ -28,10 +45,7 @@ const paste = () => {
     //create the new blurb to paste....
     Index.words.forEach((word) => (word.currentBlurb = false));
     Index.words.push(
-      new WordBlurb(
-        Caret.caret.currLocationLive.x,
-        Caret.caret.currLocationLive.y
-      )
+      new WordBlurb(Caret.caret.vimCaretLoc.x, Caret.caret.vimCaretLoc.y)
     );
     let currBlurbInfo = getCurrentBlurb();
     Index.words[currBlurbInfo[1]].str = Caret.caret.selectedText.join("");
@@ -51,7 +65,7 @@ const paste = () => {
 const handleRightArrow = (e) => {
   let currBlurbInfo = getCurrentBlurb();
 
-  console.log(Caret.caret.index);
+  //console.log(Caret.caret.index);
   if (
     Caret.caret.index >= 0 &&
     Caret.caret.index <= currBlurbInfo[0].cursorLocations.length - 2
@@ -59,20 +73,23 @@ const handleRightArrow = (e) => {
     Caret.caret.index += 1;
   } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length - 1) {
     Caret.caret.index = 0;
+  } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
+    Caret.caret.index = 0;
   } else {
     Caret.caret.index = Caret.caret.indexOfSelectionStart;
   }
 
-  console.log(
-    currBlurbInfo[0].cursorLocations.at(-1),
-    "last index",
-    "curr positions",
-    currBlurbInfo[0].cursorLocations.at(Caret.caret.index)
-  );
+  // console.log(
+  //   currBlurbInfo[0].cursorLocations.at(-1),
+  //   "last index",
+  //   "curr positions",
+  //   currBlurbInfo[0].cursorLocations.at(Caret.caret.index),
+  //   Caret.caret.index
+  // );
 
   //highlighting/selection area (seems like i've been slowling relaying on index more vs currlive.x or whatever so should just keep that up...)
   if (e.shiftKey) {
-    console.log("running, right arrow...");
+    //console.log("running, right arrow...");
     //we should start changing the selection highlight now...
     Caret.caret.selectionActive = true;
     Caret.caret.indexOfSelectionStart =
@@ -86,7 +103,7 @@ const handleRightArrow = (e) => {
       currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
       currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
   } else {
-    console.log("arrow key??");
+    //console.log("arrow key??");
     Caret.caret.selectionActive = false;
     Caret.caret.selectionLength = 0;
     Caret.caret.indexOfSelectionStart =
@@ -106,13 +123,15 @@ const handleLeftArrow = (e) => {
     Caret.caret.index -= 1;
   } else if (Caret.caret.index == 0) {
     Caret.caret.index = currBlurbInfo[0].cursorLocations.length - 1;
+  } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
+    Caret.caret.index -= 2;
   } else {
     Caret.caret.index = Caret.caret.indexOfSelectionStart;
   }
 
   //TODO fix the skipping of a index on the highlighting...
   if (e.shiftKey) {
-    console.log("arrow key??");
+    //console.log("arrow key??");
     //we should start changing the selection highlight now...
     Caret.caret.selectionActive = true;
     Caret.caret.indexOfSelectionStart =
@@ -127,7 +146,7 @@ const handleLeftArrow = (e) => {
       currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
       currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
   } else {
-    console.log("arrow key ran??");
+    //console.log("arrow key ran??");
     Caret.caret.selectionActive = false;
     Caret.caret.selectionLength = 0;
     Caret.caret.indexOfSelectionStart =
@@ -137,9 +156,11 @@ const handleLeftArrow = (e) => {
   }
 };
 
+//just modify this w a bool so it cuts the text if we are cutting
+//and not pasting...
 const determineSelectedData = (startIndex, endIndex) => {
   let currBlurbInfo = getCurrentBlurb();
-  console.log(startIndex, endIndex, "indices of selection");
+  //console.log(startIndex, endIndex, "indices of selection");
 
   if (startIndex > endIndex) {
     let copiedText = Index.words[currBlurbInfo[1]].charList.slice(
@@ -147,17 +168,18 @@ const determineSelectedData = (startIndex, endIndex) => {
       startIndex + 1
     );
     Caret.caret.selectedText = copiedText;
-    console.log(copiedText, "copied text");
+    //console.log(copiedText, "copied text");
   } else {
     let copiedText = Index.words[currBlurbInfo[1]].charList.slice(
       startIndex + 1,
       endIndex + 1
     );
     Caret.caret.selectedText = copiedText;
-    console.log(copiedText, "copied text");
+    //console.log(copiedText, "copied text");
   }
 };
 
+//need this to account for mid blurb enter hits,,, etc...
 const handleEnter = (e, currBlurbInfo) => {
   //set width of wordBlurb...reset width to zero when using the q+enter shortcut...
   //enter will just always add to the current Cloud, a mouseDown (for now, will create a new cloud)
@@ -182,17 +204,24 @@ const linked = (wordBlurb) => {
 };
 
 const handleTextEdit = (e, currBlurbInfo) => {
-  if (e.meta && e.key == "c") {
+  if (e.metaKey && e.key == "c") {
     copy();
-  } else if (e.meta && e.key == "x") {
+  } else if (e.metaKey && e.key == "x") {
     cut();
-  } else if (e.meta && e.key == "v") {
+  } else if (e.metaKey && e.key == "v") {
     paste();
   } else {
     WBA.activateCaret();
     WBA.handleNewChar(e, currBlurbInfo);
 
     WBA.moveCaret(e, currBlurbInfo);
+  }
+};
+
+const handleFormatText = (e, currBlurbInfo) => {
+  //console.log(e); //will change meta eventaully to control but need it for now...
+  if (e.metaKey && e.key == "u") {
+    Format.underline(currBlurbInfo[0]);
   }
 };
 
@@ -204,4 +233,5 @@ export {
   handleRightArrow,
   handleEnter,
   handleTextEdit,
+  handleFormatText,
 };

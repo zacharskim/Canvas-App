@@ -1,6 +1,7 @@
 import * as Index from "./index.js";
 import * as Caret from "./caret.js";
 import { WordBlurb } from "./wordBlurb.js";
+import { generateCursorLocations } from "./wordBlurbActions.js";
 
 const getCurrentBlurb = () => {
   let currentBlurb = Index.words.filter((blurb) => blurb.currentBlurb);
@@ -72,16 +73,13 @@ const handleLengthyOutsideText = () => {
 
       //need to check for collisions at some point...
       output.push(
-        new WordBlurb(
-          Caret.caret.currLocationLive.x,
-          Caret.caret.currLocationLive.y
-        )
+        new WordBlurb(Caret.caret.vimCaretLoc.x, Caret.caret.vimCaretLoc.y)
       );
       output.at(-1).str = tempStr;
       output.at(-1).charList = tempStr.split("");
       tempStr = "";
     } else if (textMetrics.width >= 400) {
-      console.log(output);
+      //console.log(output);
       output.push(
         new WordBlurb(output.at(-1).startX, output.at(-1).startY + 18)
       );
@@ -109,7 +107,7 @@ const handleLengthyOutsideText = () => {
 
   for (let i = -1; 0 < len; i--) {
     len -= 1;
-    console.log(i);
+    //console.log(i);
     Index.words.at(i).prevBlurb = Index.words.at(i - 1);
     Index.words.at(i).nextBlurb = Index.words.at(i + 1);
   }
@@ -133,9 +131,9 @@ const determineWordBlurbMetrics = (arr) => {
       let textMetrics = Index.ctx.measureText(tempCharStr);
       wb.cursorLocations.push(textMetrics.width + wb.startX);
       tempCharStr = tempCharStr.slice(0, -1);
+      // console.log("metrics for", wb.str);
+      generateCursorLocations([wb]);
     });
-
-    wb.cursorLocations = wb.cursorLocations.reverse();
 
     wb.endX = textMetrics.width + wb.startX;
     wb.endY = wb.startY;
