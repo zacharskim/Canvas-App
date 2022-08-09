@@ -29,57 +29,37 @@ const strikethrough = () => {};
 
 //just hook up to events and maybe write a few handler functions or something
 //should be pretty easy i bet...
-const setFormat = (loc, currBlurbInfo, index) => {
+const setFormat = (loc, blurb, index) => {
   if (Caret.caret.bold && Caret.caret.italicize) {
     //only add it to the array if not already in there...
-    if (
-      currBlurbInfo[0].format.filter((formatObj) => formatObj.id == index)
-        .length <= 0
-    ) {
-      currBlurbInfo[0].format.push({
+    if (blurb.format.filter((formatObj) => formatObj.id == index).length <= 0) {
+      blurb.format.push({
         loc: loc,
         style: "italic bold",
         id: index,
       });
     }
-
-    Index.ctx.font = "italic bold 16px Times New Roman";
   } else if (Caret.caret.italicize) {
-    if (
-      currBlurbInfo[0].format.filter((formatObj) => formatObj.id == index)
-        .length <= 0
-    ) {
-      currBlurbInfo[0].format.push({ loc: loc, style: "italic", id: index });
+    if (blurb.format.filter((formatObj) => formatObj.id == index).length <= 0) {
+      blurb.format.push({ loc: loc, style: "italic", id: index });
     }
-
-    Index.ctx.font = "italic 16px Times New Roman";
   } else if (Caret.caret.bold) {
-    if (
-      currBlurbInfo[0].format.filter((formatObj) => formatObj.id == index)
-        .length <= 0
-    ) {
-      currBlurbInfo[0].format.push({ loc: loc, style: "bold", id: index });
+    if (blurb.format.filter((formatObj) => formatObj.id == index).length <= 0) {
+      blurb.format.push({ loc: loc, style: "bold", id: index });
     }
-    Index.ctx.font = "bold 16px Times New Roman";
   } else {
     //note, objects that are made in two differnt locations, even with the same attributes,
     //are seen as differnt according to js...
-    if (
-      currBlurbInfo[0].format.filter((formatObj) => formatObj.id == index)
-        .length <= 0
-    ) {
-      currBlurbInfo[0].format.push({ loc: loc, style: "", id: index });
+    if (blurb.format.filter((formatObj) => formatObj.id == index).length <= 0) {
+      blurb.format.push({ loc: loc, style: "", id: index });
     }
-    Index.ctx.font = "16px Times New Roman";
   }
   Index.ctx.fillStyle = "white";
   Index.ctx.textBaseline = "hanging";
 };
 
-const setIndividualCharFormat = (index, currBlurbInfo) => {
-  let charFormat = currBlurbInfo[0].format.filter(
-    (formatObj) => formatObj.id == index
-  );
+const setIndividualCharFormat = (index, blurb) => {
+  let charFormat = blurb.format.filter((formatObj) => formatObj.id == index);
 
   if (charFormat[0].style == "italic bold") {
     Index.ctx.font = "italic bold 16px Times New Roman";
@@ -88,13 +68,14 @@ const setIndividualCharFormat = (index, currBlurbInfo) => {
   } else if (charFormat[0].style == "bold") {
     Index.ctx.font = "bold 16px Times New Roman";
   } else {
-    Index.ctx.font = "16px Times New Roma";
+    Index.ctx.font = "16px Times New Roman";
   }
 };
 
 const handleFormat = (e, currBlurbInfo) => {
   if (e.key == "i" && e.metaKey) {
     Caret.caret.italicize = !Caret.caret.italicize;
+    console.log(Caret.caret.italicize);
   } else if (e.key == "b" && e.metaKey) {
     Caret.caret.bold = !Caret.caret.bold;
   } else {
@@ -109,10 +90,6 @@ const handleFormat = (e, currBlurbInfo) => {
 //applying some formatting thing then typing...
 //removing some formatting thing...
 
+//does not consider moving backwards...index thing needs a lot of work...
+
 export { underline, setFormat, handleFormat, setIndividualCharFormat };
-
-//this is kinda a pain in the ass...
-
-//got to iterate again....
-
-//fuck...

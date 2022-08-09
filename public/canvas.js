@@ -9,6 +9,7 @@ const drawCanvas = () => {
   //these following two lines of code reset the canvas context etc...
   Index.canvas.width = window.innerWidth;
   Index.canvas.height = window.innerHeight;
+  Index.ctx.fillRect(Index.canvas.width / 2, Index.canvas.height / 2, 10, 10);
 
   Index.ctx.font = "16px Times New Roman";
   Index.ctx.fillStyle = "white";
@@ -35,17 +36,20 @@ const drawText = (currBlurbInfo) => {
   //i think...
   Index.words.forEach((blurb) => {
     blurb.boundingBox = new BoundingBox(blurb);
+
     let index = 0;
     blurb.cursorLocations.forEach((loc) => {
       //for each space between cursorLocations, we assign a
       //specfic formatting rules based on each indvidual character
       //allows us to bold some parts of a wordBlurb but not the whole thing
 
-      Format.setFormat(loc, currBlurbInfo, index);
+      Format.setFormat(loc, blurb, index);
 
       if (typeof blurb.charList[index] != "undefined") {
         //make this so it only temporary changes the context???
-        Format.setIndividualCharFormat(index, currBlurbInfo);
+
+        Format.setIndividualCharFormat(index, blurb);
+        //console.log(blurb.startX, blurb.startY, blurb.str);
         Index.ctx.fillText(blurb.charList[index], loc, blurb.startY);
       }
       index++;

@@ -5,7 +5,7 @@ import * as Canvas from "./canvas.js";
 import * as DA from "./docActions.js";
 import * as WBA from "./wordBlurbActions.js";
 import * as Nav from "./navigation.js";
-import { sprite } from "./sprite.js";
+import { generateTestData } from "./testData.js";
 import * as Format from "./format.js";
 
 const handleKeyDown = (e) => {
@@ -23,7 +23,6 @@ const handleKeyDown = (e) => {
 
         break;
       case 13: //enter
-        WBA.activateCaret();
         DA.handleEnter(e, currBlurbInfo);
         WBA.moveCaret(e, currBlurbInfo);
         Canvas.drawCanvas();
@@ -41,12 +40,16 @@ const handleKeyDown = (e) => {
       case 37:
         WBA.activateCaret();
         DA.handleLeftArrow(e);
+        Nav.handleArrowKey(currBlurbInfo[0], e);
+        Nav.reCenterAll();
         Canvas.drawCanvas();
         break;
 
       case 39:
         WBA.activateCaret();
         DA.handleRightArrow(e);
+        Nav.handleArrowKey(currBlurbInfo[0], e);
+        Nav.reCenterAll();
         Canvas.drawCanvas();
         break;
 
@@ -54,7 +57,7 @@ const handleKeyDown = (e) => {
       case 40:
         WBA.activateCaret();
         Nav.handleArrowKey(currBlurbInfo[0], e);
-        Nav.reCenter();
+        Nav.reCenterAll();
         Canvas.drawCanvas();
         break;
 
@@ -78,11 +81,19 @@ const handleKeyDown = (e) => {
       case 91: //meta
         break;
 
-      case 187:
+      case 18: //alt
+        break;
+
+      case 90: //z
+        Nav.reCenter(e, currBlurbInfo);
+        break;
+
+      case 187: //'=', just for testing
+        generateTestData();
         console.log(Index.words);
         break;
 
-      case 57: //9...just for testing...
+      case 57: //9...also just for testing...
         currBlurbInfo[0].boundingBox.draw(Index.ctx);
         break;
 
@@ -111,10 +122,12 @@ const handleKeyDown = (e) => {
 
 const handleMouseDown = (e) => {
   Index.ctx.fillStyle = "white";
+
   //setting caret data on mousedown...should make this into a refresh caret function...
   Caret.caret.CurrMouseX = e.clientX;
   Caret.caret.CurrMouseY = e.clientY;
   Caret.caret.mouseDown = true;
+  WBA.determineCurrBlurb();
 
   if (Caret.caret.navMode == "insert") {
     WBA.activateCaret();
@@ -122,7 +135,6 @@ const handleMouseDown = (e) => {
 
     //determining wheather or not to create a new blurb or set the currentBlurb or both
     //WBA.createBlurb(); //ehh this line will need to go in the morning...
-    WBA.determineCurrBlurb();
 
     //determines caret index...
     WBA.insertCursor();
@@ -196,7 +208,21 @@ const handleMouseMove = (e) => {
   Canvas.drawCanvas();
 };
 
-export { handleKeyDown, handleMouseDown, handleMouseUp, handleMouseMove };
+const handleDoubleClick = () => {
+  WBA.determineCurrBlurb();
+  Caret.caret.navMode = "insert";
+  WBA.activateCaret();
+  WBA.insertCursor();
+  Canvas.drawCanvas();
+};
+
+export {
+  handleKeyDown,
+  handleMouseDown,
+  handleMouseUp,
+  handleMouseMove,
+  handleDoubleClick,
+};
 
 //TODO let the user insert into text blurbs...DONE
 

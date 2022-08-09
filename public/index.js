@@ -17,6 +17,7 @@ addEventListener("keydown", (e) => Events.handleKeyDown(e));
 addEventListener("mousedown", (e) => Events.handleMouseDown(e));
 addEventListener("mouseup", (e) => Events.handleMouseUp(e));
 addEventListener("mousemove", (e) => Events.handleMouseMove(e));
+addEventListener("dblclick", (e) => Events.handleDoubleClick());
 
 //refactoring so that wordBlurbs move when the sprite is moved or when in
 //caret mode...

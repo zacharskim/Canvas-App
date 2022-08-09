@@ -4,7 +4,7 @@ import * as Caret from "./caret.js";
 import * as Utils from "./utils.js";
 import * as Canvas from "./canvas.js";
 import { WordBlurb } from "./wordBlurb.js";
-import { sprite } from "./sprite.js";
+
 const insertCursor = () => {
   //this function inserts the currsor into the current word blurb...
   //the currentBlurb may be brand new or it may have text in it...
@@ -18,7 +18,8 @@ const insertCursor = () => {
     );
   } //else just leave it at zero...it will be changed by move caret...
 
-  // yeah this is what i needed...to solve highlighitng issue...
+  // yeah this is what i needed...to solve highlighitng issue...resting 
+  //the caret to some degree,,, might be useful to abstract at a certain point...
   Caret.caret.indexOfSelectionStart = Caret.caret.index;
   Caret.caret.selectionLength = 0;
 
@@ -30,7 +31,7 @@ const insertCursor = () => {
   //  console.log(Caret.caret.index, "from insertCursor");
 };
 
-const moveCaret = (e, currBlurbInfo) => {
+const moveCaret = (e) => {
   //this function move the caret along the word blurb as characters are inserted...
 
   if (e.keyCode == 8) {
@@ -57,11 +58,12 @@ addEventListener("typingCheck", (e) => {
       Caret.caret.active = !Caret.caret.active;
     }
   } else {
-    Caret.caret.active = true;
+    // Caret.caret.active = true;
   }
   Canvas.drawCanvas();
 });
 
+//this is more like set currBlurb...
 const determineCurrBlurb = () => {
   //this function determines if a preexisting blurb was set...
   let blurbsWithText = Index.words.filter((wordblurb) => wordblurb.str != "");
@@ -69,6 +71,7 @@ const determineCurrBlurb = () => {
   let found = blurbsWithText.filter((boxes) =>
     boxes.boundingBox.contains(Caret.caret.CurrMouseX, Caret.caret.CurrMouseY)
   );
+  console.log(found);
 
   if (found.length > 0) {
     let indexOfCurrBlurb = Index.words.findIndex(
@@ -213,6 +216,7 @@ const handleNewChar = (e, currBlurbInfo) => {
 };
 
 const activateCaret = () => {
+  document.documentElement.style.cursor = "none";
   Caret.caret.active = true;
   Caret.caret.timeSinceLastActivity = 0;
 };

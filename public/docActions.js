@@ -39,6 +39,7 @@ addEventListener("paste", (event) => {
   }
 });
 
+//should not always create a new wordblurb...
 const paste = () => {
   //selectedText is from the determineSelectedData calll...
   if (Caret.caret.selectedText.length > 0) {
@@ -62,36 +63,16 @@ const paste = () => {
   }
 };
 
+//hmm...would it be easier to just track the first index and the last index,
+//then if we reached one of those locations we could raise a flag instead of
+//some odd if else stuff?
+
 const handleRightArrow = (e) => {
   let currBlurbInfo = getCurrentBlurb();
-
-  //console.log(Caret.caret.index);
-  if (
-    Caret.caret.index >= 0 &&
-    Caret.caret.index <= currBlurbInfo[0].cursorLocations.length - 2
-  ) {
-    Caret.caret.index += 1;
-  } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length - 1) {
-    Caret.caret.index = 0;
-  } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
-    Caret.caret.index = 0;
-  } else {
-    Caret.caret.index = Caret.caret.indexOfSelectionStart;
-  }
-
-  // console.log(
-  //   currBlurbInfo[0].cursorLocations.at(-1),
-  //   "last index",
-  //   "curr positions",
-  //   currBlurbInfo[0].cursorLocations.at(Caret.caret.index),
-  //   Caret.caret.index
-  // );
-
-  //highlighting/selection area (seems like i've been slowling relaying on index more vs currlive.x or whatever so should just keep that up...)
   if (e.shiftKey) {
-    //console.log("running, right arrow...");
     //we should start changing the selection highlight now...
     Caret.caret.selectionActive = true;
+    console.log(Caret.caret.indexOfSelectionStart);
     Caret.caret.indexOfSelectionStart =
       Caret.caret.indexOfSelectionStart == -100
         ? Caret.caret.index
@@ -99,9 +80,6 @@ const handleRightArrow = (e) => {
 
     //this part matters most...
     console.log(Caret.caret.indexOfSelectionStart, Caret.caret.index);
-    Caret.caret.selectionLength =
-      currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
-      currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
   } else {
     //console.log("arrow key??");
     Caret.caret.selectionActive = false;
@@ -111,25 +89,31 @@ const handleRightArrow = (e) => {
         ? -100
         : Caret.caret.indexOfSelectionStart;
   }
+  if (!e.altKey) {
+    if (
+      Caret.caret.index >= 0 &&
+      Caret.caret.index <= currBlurbInfo[0].cursorLocations.length - 2
+    ) {
+      Caret.caret.index += 1;
+    } else if (
+      Caret.caret.index ==
+      currBlurbInfo[0].cursorLocations.length - 1
+    ) {
+      Caret.caret.index = 0;
+    } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
+      Caret.caret.index = 0;
+    }
+
+    //determine selection length now...after setting the respective indexes...
+    Caret.caret.selectionLength =
+      currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
+      currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
+  }
 };
 
 const handleLeftArrow = (e) => {
   let currBlurbInfo = getCurrentBlurb();
 
-  if (
-    Caret.caret.index > 0 &&
-    Caret.caret.index <= currBlurbInfo[0].cursorLocations.length - 1
-  ) {
-    Caret.caret.index -= 1;
-  } else if (Caret.caret.index == 0) {
-    Caret.caret.index = currBlurbInfo[0].cursorLocations.length - 1;
-  } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
-    Caret.caret.index -= 2;
-  } else {
-    Caret.caret.index = Caret.caret.indexOfSelectionStart;
-  }
-
-  //TODO fix the skipping of a index on the highlighting...
   if (e.shiftKey) {
     //console.log("arrow key??");
     //we should start changing the selection highlight now...
@@ -138,13 +122,6 @@ const handleLeftArrow = (e) => {
       Caret.caret.indexOfSelectionStart == -100
         ? Caret.caret.index
         : Caret.caret.indexOfSelectionStart;
-
-    determineSelectedData(Caret.caret.indexOfSelectionStart, Caret.caret.index);
-
-    //this is what matters
-    Caret.caret.selectionLength =
-      currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
-      currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
   } else {
     //console.log("arrow key ran??");
     Caret.caret.selectionActive = false;
@@ -153,6 +130,25 @@ const handleLeftArrow = (e) => {
       Caret.caret.indexOfSelectionStart != -100
         ? -100
         : Caret.caret.indexOfSelectionStart;
+  }
+  if (!e.altKey) {
+    if (
+      Caret.caret.index > 0 &&
+      Caret.caret.index <= currBlurbInfo[0].cursorLocations.length - 1
+    ) {
+      Caret.caret.index -= 1;
+    } else if (Caret.caret.index == 0) {
+      Caret.caret.index = currBlurbInfo[0].cursorLocations.length - 1;
+    } else if (Caret.caret.index == currBlurbInfo[0].cursorLocations.length) {
+      Caret.caret.index -= 2;
+    } else {
+      Caret.caret.index = Caret.caret.indexOfSelectionStart;
+    }
+
+    //this is what matters
+    Caret.caret.selectionLength =
+      currBlurbInfo[0].cursorLocations.at(Caret.caret.index) -
+      currBlurbInfo[0].cursorLocations.at(Caret.caret.indexOfSelectionStart);
   }
 };
 
@@ -164,18 +160,18 @@ const determineSelectedData = (startIndex, endIndex) => {
 
   if (startIndex > endIndex) {
     let copiedText = Index.words[currBlurbInfo[1]].charList.slice(
-      endIndex + 1,
-      startIndex + 1
+      endIndex,
+      startIndex
     );
     Caret.caret.selectedText = copiedText;
-    //console.log(copiedText, "copied text");
+    //console.log(copiedText, "copied text1");
   } else {
     let copiedText = Index.words[currBlurbInfo[1]].charList.slice(
-      startIndex + 1,
-      endIndex + 1
+      startIndex,
+      endIndex
     );
     Caret.caret.selectedText = copiedText;
-    //console.log(copiedText, "copied text");
+    //console.log(copiedText, "copied text2");
   }
 };
 
